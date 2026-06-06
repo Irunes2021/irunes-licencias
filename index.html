@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CC Irunés · Licencias</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --border: #e0e0e0;
+    --accent: #1a3a5c;
+    --cat-cadete: #e67e22;
+    --cat-junior: #c0392b;
+    --text: #1a1a1a;
+    --muted: #888;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem;
+  }
+  .login-box {
+    background: var(--surface); border-radius: 16px; padding: 2.5rem;
+    width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .login-logo { text-align: center; }
+  .login-logo span { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
+  .login-logo h1 { font-size: 1.4rem; font-weight: 600; color: var(--accent); margin-top: 0.4rem; }
+  .login-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+  .login-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; color: var(--text);
+    font-size: 1.2rem; letter-spacing: 0.2em; outline: none; text-align: center;
+  }
+  .login-btn {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius); padding: 1rem; font-weight: 600; font-size: 1rem; cursor: pointer;
+  }
+  .login-error { color: #c0392b; font-size: 0.85rem; text-align: center; display: none; }
+
+  /* APP */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--accent); color: #fff;
+    padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-title { font-size: 1rem; font-weight: 600; }
+  .header-sub { font-size: 0.75rem; opacity: 0.7; margin-top: 0.1rem; }
+  .logout-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; }
+
+  /* TABS */
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 9; }
+  .tab {
+    flex: 1; padding: 1rem; text-align: center; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; border-bottom: 3px solid transparent; color: var(--muted); transition: all 0.2s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab[data-cat="cadete"].active { color: var(--cat-cadete); border-bottom-color: var(--cat-cadete); }
+  .tab[data-cat="junior"].active { color: var(--cat-junior); border-bottom-color: var(--cat-junior); }
+
+  /* CONTENT */
+  .content { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  /* SECTION */
+  .section-title {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--muted); padding: 0 0.5rem; margin-top: 0.5rem;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card-info { flex: 1; }
+  .card-name { font-weight: 600; font-size: 1rem; }
+  .card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+  .card-btns { display: flex; gap: 0.5rem; flex-shrink: 0; margin-left: 1rem; }
+  .lic-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 10px; font-weight: 700;
+    font-size: 0.9rem; text-decoration: none; color: #fff;
+    background: var(--accent);
+  }
+  .lic-btn.b { background: var(--accent); opacity: 0.75; }
+  .no-lic { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+  .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 0.9rem; }
+
+  .badge-entrenador {
+    display: inline-block; background: #eaf4fb; color: #1a6fa0;
+    border: 1px solid #85c1e9; border-radius: 10px; font-size: 0.65rem;
+    padding: 0.1rem 0.5rem; margin-top: 0.2rem; font-weight: 600; letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span>Club Ciclista Irunés</span>
+      <h1>Licencias</h1>
+    </div>
+    <div>
+      <div class="login-label">Código de acceso</div>
+      <input type="password" class="login-input" id="login-input" placeholder="••••••" maxlength="10" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Código incorrecto</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title">CC Irunés · Licencias</div>
+      <div class="header-sub" id="header-sub">—</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Salir</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-cat="cadete" onclick="setTab('cadete')">🟠 Cadetes</div>
+    <div class="tab" data-cat="junior" onclick="setTab('junior')">🔴 Juniors</div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://dbydtwkzknbpifneznsu.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRieWR0d2t6a25icGlmbmV6bnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMjMwODIsImV4cCI6MjA5MDc5OTA4Mn0.HcTWBEaI-2EH66mAUAaEM2ppzDG3eCd1ANjopNZdt1g';
+  const STORAGE = 'https://dbydtwkzknbpifneznsu.supabase.co/storage/v1/object/public/Licencias';
+  const ADMIN_CODE = '2121$';
+
+  let corredores = [];
+  let entrenadores = [];
+  let tabActual = 'cadete';
+
+  function doLogin() {
+    if (document.getElementById('login-input').value === ADMIN_CODE) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      loadData();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+  document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  function doLogout() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-input').value = '';
+  }
+
+  async function sbFetch(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function loadData() {
+    [corredores, entrenadores] = await Promise.all([
+      sbFetch('corredores?select=nombre,apellido1,apellido2,categoria,licencia_nombre,num_licencia&activo=eq.true&order=apellido1.asc'),
+      sbFetch('entrenadores?select=nombre,categoria,licencia_nombre&activo=eq.true&order=nombre.asc')
+    ]);
+    renderTab();
+  }
+
+  function setTab(cat) {
+    tabActual = cat;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[data-cat="${cat}"]`).classList.add('active');
+    renderTab();
+  }
+
+  function licBtns(nombre) {
+    if (!nombre) return '<span class="no-lic">Sin licencia</span>';
+    return `
+      <a href="${STORAGE}/${nombre}1.png" target="_blank" class="lic-btn">A</a>
+      <a href="${STORAGE}/${nombre}2.png" target="_blank" class="lic-btn b">B</a>`;
+  }
+
+  function renderTab() {
+    const cat = tabActual;
+    const label = cat === 'cadete' ? 'Cadetes' : 'Juniors';
+    document.getElementById('header-sub').textContent = label;
+
+    const tecnicos = entrenadores.filter(e => e.categoria === cat);
+    const riders = corredores.filter(c => c.categoria === cat);
+
+    let html = '';
+
+    // Entrenadores
+    if (tecnicos.length > 0) {
+      html += '<div class="section-title">Técnicos</div>';
+      tecnicos.forEach(e => {
+        html += `<div class="card">
+          <div class="card-info">
+            <div class="card-name">${e.nombre}</div>
+            <div><span class="badge-entrenador">TÉCNICO</span></div>
+          </div>
+          <div class="card-btns">${licBtns(e.licencia_nombre)}</div>
+        </div>`;
+      });
+    }
+
+    // Corredores
+    html += '<div class="section-title">Corredores</div>';
+    if (riders.length === 0) {
+      html += '<div class="empty">No hay corredores en esta categoría</div>';
+    } else {
+      riders.forEach(c => {
+        const nombre = `${c.apellido1 || ''} ${c.apellido2 || ''}, ${c.nombre || ''}`;
+        const sub = c.num_licencia ? `Lic: ${c.num_licencia}` : '';
+        html += `<div class="card">
+          <div class="card-info">
+            <div class="card-name">${nombre}</div>
+            ${sub ? `<div class="card-sub">${sub}</div>` : ''}
+          </div>
+          <div class="card-btns">${licBtns(c.licencia_nombre)}</div>
+        </div>`;
+      });
+    }
+
+    document.getElementById('content').innerHTML = html;
+  }
+</script>
+</body>
+</html>
