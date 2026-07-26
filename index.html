@@ -145,15 +145,28 @@
   const STORAGE = 'https://dbydtwkzknbpifneznsu.supabase.co/storage/v1/object/public/Licencias';
   const ADMIN_CODE = '2121';
 
+  // ─── SESIÓN COMPARTIDA *.ccirunes.com ───────────────────────
+  const GRUPO = 'club';
+  const CC_HORAS = 12;
+  const ccSesionActiva = g => document.cookie.split('; ').some(c => c === 'cc_' + g + '=ok');
+  const ccAbrirSesion  = g => document.cookie = `cc_${g}=ok; domain=.ccirunes.com; path=/; max-age=${CC_HORAS*3600}; SameSite=Lax; Secure`;
+  const ccCerrarSesion = g => document.cookie = `cc_${g}=; domain=.ccirunes.com; path=/; max-age=0; SameSite=Lax; Secure`;
+  // ────────────────────────────────────────────────────────────
+
   let corredores = [];
   let entrenadores = [];
   let tabActual = 'cadete';
 
+  function entrarApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadData();
+  }
+
   function doLogin() {
     if (document.getElementById('login-input').value === ADMIN_CODE) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      loadData();
+      ccAbrirSesion(GRUPO);
+      entrarApp();
     } else {
       document.getElementById('login-error').style.display = 'block';
     }
@@ -161,6 +174,7 @@
   document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
+    ccCerrarSesion(GRUPO);
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-input').value = '';
@@ -239,6 +253,9 @@
 
     document.getElementById('content').innerHTML = html;
   }
+
+  // Si ya hay sesión abierta en otra app del grupo, entrar directo
+  if (ccSesionActiva(GRUPO)) entrarApp();
 </script>
 </body>
 </html>
