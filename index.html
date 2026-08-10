@@ -153,6 +153,11 @@
   const ccCerrarSesion = g => document.cookie = `cc_${g}=; domain=.ccirunes.com; path=/; max-age=0; SameSite=Lax; Secure`;
   // ────────────────────────────────────────────────────────────
 
+  // ─── TEMPORADA ──────────────────────────────────────────────
+  // Cambiar cada año, cuando estén subidas las licencias nuevas.
+  const TEMPORADA = '2026-2027';
+  // ────────────────────────────────────────────────────────────
+
   let corredores = [];
   let entrenadores = [];
   let tabActual = 'cadete';
@@ -189,8 +194,8 @@
 
   async function loadData() {
     [corredores, entrenadores] = await Promise.all([
-      sbFetch('corredores?select=nombre,apellido1,apellido2,categoria,licencia_nombre,num_licencia&activo=eq.true&order=apellido1.asc'),
-      sbFetch('entrenadores?select=nombre,categoria,licencia_nombre&activo=eq.true&order=nombre.asc')
+      sbFetch(`corredores?select=nombre,apellido1,apellido2,categoria,licencia_nombre,num_licencia&activo=eq.true&temporada=eq.${encodeURIComponent(TEMPORADA)}&order=apellido1.asc`),
+      sbFetch(`entrenadores?select=nombre,categoria,licencia_nombre&activo=eq.true&temporada=eq.${encodeURIComponent(TEMPORADA)}&order=nombre.asc`)
     ]);
     renderTab();
   }
@@ -212,7 +217,7 @@
   function renderTab() {
     const cat = tabActual;
     const label = cat === 'cadete' ? 'Cadetes' : 'Juniors';
-    document.getElementById('header-sub').textContent = label;
+    document.getElementById('header-sub').textContent = label + ' · ' + TEMPORADA;
 
     const tecnicos = entrenadores.filter(e => e.categoria === cat);
     const riders = corredores.filter(c => c.categoria === cat);
