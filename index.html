@@ -154,8 +154,9 @@
   // ────────────────────────────────────────────────────────────
 
   // ─── TEMPORADA ──────────────────────────────────────────────
-  // Cambiar cada año, cuando estén subidas las licencias nuevas.
-  const TEMPORADA = '2026-2027';
+  // PENDIENTE: cambiar a '2026-2027' a mediados de septiembre de 2026,
+  // cuando estén subidas las licencias nuevas de la temporada.
+  const TEMPORADA = '2025-2026';
   // ────────────────────────────────────────────────────────────
 
   let corredores = [];
@@ -195,7 +196,7 @@
   async function loadData() {
     [corredores, entrenadores] = await Promise.all([
       sbFetch(`corredores?select=nombre,apellido1,apellido2,categoria,licencia_nombre,num_licencia&activo=eq.true&temporada=eq.${encodeURIComponent(TEMPORADA)}&order=apellido1.asc`),
-      sbFetch(`entrenadores?select=nombre,categoria,licencia_nombre&activo=eq.true&temporada=eq.${encodeURIComponent(TEMPORADA)}&order=nombre.asc`)
+      sbFetch(`entrenadores?select=nombre,apellido1,apellido2,categoria,licencia_nombre&activo=eq.true&temporada=eq.${encodeURIComponent(TEMPORADA)}&order=apellido1.asc`)
     ]);
     renderTab();
   }
@@ -228,9 +229,11 @@
     if (tecnicos.length > 0) {
       html += '<div class="section-title">Técnicos</div>';
       tecnicos.forEach(e => {
+        const nomTec = [e.apellido1, e.apellido2].filter(Boolean).join(' ');
+        const etiqueta = nomTec ? `${nomTec}, ${e.nombre || ''}` : (e.nombre || '');
         html += `<div class="card">
           <div class="card-info">
-            <div class="card-name">${e.nombre}</div>
+            <div class="card-name">${etiqueta}</div>
             <div><span class="badge-entrenador">TÉCNICO</span></div>
           </div>
           <div class="card-btns">${licBtns(e.licencia_nombre)}</div>
