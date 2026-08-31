@@ -114,11 +114,15 @@
       <h1>Licencias</h1>
     </div>
     <div>
-      <div class="login-label">Código de acceso</div>
-      <input type="password" class="login-input" id="login-input" placeholder="••••••" maxlength="10" />
+      <div class="login-label">Email</div>
+      <input type="email" class="login-input" id="login-email" placeholder="tu@ccirunes.com" />
+    </div>
+    <div>
+      <div class="login-label">Contraseña</div>
+      <input type="password" class="login-input" id="login-input" placeholder="••••••" maxlength="20" />
     </div>
     <button class="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-error" id="login-error">Código incorrecto</div>
+    <div class="login-error" id="login-error">Email o contraseña incorrectos</div>
   </div>
 </div>
 
@@ -147,14 +151,53 @@
   const SUPABASE_URL = 'https://dbydtwkzknbpifneznsu.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRieWR0d2t6a25icGlmbmV6bnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMjMwODIsImV4cCI6MjA5MDc5OTA4Mn0.HcTWBEaI-2EH66mAUAaEM2ppzDG3eCd1ANjopNZdt1g';
   const STORAGE = 'https://dbydtwkzknbpifneznsu.supabase.co/storage/v1/object/public/Licencias';
-  const ADMIN_CODE = '2121';
 
-  // ─── SESIÓN COMPARTIDA *.ccirunes.com ───────────────────────
-  const GRUPO = 'club';
-  const CC_HORAS = 12;
-  const ccSesionActiva = g => document.cookie.split('; ').some(c => c === 'cc_' + g + '=ok');
-  const ccAbrirSesion  = g => document.cookie = `cc_${g}=ok; domain=.ccirunes.com; path=/; max-age=${CC_HORAS*3600}; SameSite=Lax; Secure`;
-  const ccCerrarSesion = g => document.cookie = `cc_${g}=; domain=.ccirunes.com; path=/; max-age=0; SameSite=Lax; Secure`;
+  // ─── SESIÓN SUPABASE AUTH ────────────────────────────────────
+  const SS_KEY = 'cc_licencias_session';
+  const REFRESH_MS = 50 * 60 * 1000; // 50 min
+  let miRol = null;
+  let refreshTimer = null;
+
+  function getSesion() {
+    try { return JSON.parse(localStorage.getItem(SS_KEY)); } catch { return null; }
+  }
+  function guardarSesion(s) { localStorage.setItem(SS_KEY, JSON.stringify(s)); }
+  function borrarSesion() { localStorage.removeItem(SS_KEY); miRol = null; }
+
+  async function authPassword(email, password) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) throw new Error('Credenciales incorrectas');
+    return res.json();
+  }
+
+  async function authRefresh(refresh_token) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token })
+    });
+    if (!res.ok) throw new Error('No se pudo refrescar la sesión');
+    return res.json();
+  }
+
+  function programarRefresco() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(async () => {
+      const s = getSesion();
+      if (!s) return;
+      try {
+        const nueva = await authRefresh(s.refresh_token);
+        guardarSesion(nueva);
+      } catch {
+        borrarSesion();
+        mostrarLogin();
+      }
+    }, REFRESH_MS);
+  }
   // ────────────────────────────────────────────────────────────
 
   // ─── TEMPORADA ──────────────────────────────────────────────
@@ -177,6 +220,12 @@
   let entrenadores = [];
   let tabActual = 'cadete';
 
+  function mostrarLogin() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-input').value = '';
+  }
+
   async function entrarApp() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -186,13 +235,7 @@
 
   async function cargarTemporadas() {
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/temporadas_corredores`, {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                   'Content-Type': 'application/json' },
-        body: '{}'
-      });
-      const filas = await r.json();
+      const filas = await sbRpc('temporadas_corredores');
       TEMPORADAS = (filas || []).map(f => f.temporada);
     } catch (e) { console.error(e); TEMPORADAS = []; }
 
@@ -212,26 +255,74 @@
     await loadData();
   }
 
-  function doLogin() {
-    if (document.getElementById('login-input').value === ADMIN_CODE) {
-      ccAbrirSesion(GRUPO);
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-input').value;
+    document.getElementById('login-error').style.display = 'none';
+    try {
+      const sesion = await authPassword(email, password);
+      guardarSesion(sesion);
+      const perfil = await sbRpc('mi_perfil');
+      const rol = perfil && perfil[0] && perfil[0].rol;
+      if (rol !== 'admin' && rol !== 'coordinador_escuela') {
+        borrarSesion();
+        throw new Error('Sin permiso para esta app');
+      }
+      miRol = rol;
+      programarRefresco();
       entrarApp();
-    } else {
+    } catch (e) {
+      borrarSesion();
       document.getElementById('login-error').style.display = 'block';
     }
   }
   document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
-    ccCerrarSesion(GRUPO);
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-input').value = '';
+    if (refreshTimer) clearInterval(refreshTimer);
+    borrarSesion();
+    mostrarLogin();
+  }
+
+  async function intentarSesionGuardada() {
+    const s = getSesion();
+    if (!s) return false;
+    try {
+      const nueva = await authRefresh(s.refresh_token);
+      guardarSesion(nueva);
+      const perfil = await sbRpc('mi_perfil');
+      const rol = perfil && perfil[0] && perfil[0].rol;
+      if (rol !== 'admin' && rol !== 'coordinador_escuela') { borrarSesion(); return false; }
+      miRol = rol;
+      programarRefresco();
+      return true;
+    } catch {
+      borrarSesion();
+      return false;
+    }
+  }
+
+  async function sbRpc(fn, args) {
+    const s = getSesion();
+    const token = s ? s.access_token : SUPABASE_KEY;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(args || {})
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
   }
 
   async function sbFetch(path) {
+    const s = getSesion();
+    const token = s ? s.access_token : SUPABASE_KEY;
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
     });
     return res.json();
   }
@@ -306,7 +397,8 @@
   }
 
   // Si ya hay sesión abierta en otra app del grupo, entrar directo
-  if (ccSesionActiva(GRUPO)) entrarApp();
+  // Si hay una sesión Supabase Auth guardada y sigue siendo válida, entrar directo
+  intentarSesionGuardada().then(ok => { if (ok) entrarApp(); });
 </script>
 </body>
 </html>
